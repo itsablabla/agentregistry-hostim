@@ -1,0 +1,31 @@
+{
+	admin off
+	auto_https off
+}
+
+:8000 {
+	# Everything except /healthz needs either the API bearer token or the admin login.
+	@protected {
+		not path /healthz
+		not header Authorization "Bearer {$REGISTRY_TOKEN}"
+	}
+	basic_auth @protected {
+		{$ADMIN_USER} {$ADMIN_HASH}
+	}
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# Registry MCP server (streamable HTTP).
+	handle_path /mcp* {
+		reverse_proxy 127.0.0.1:31313 {
+			flush_interval -1
+		}
+	}
+
+	# Web UI and REST API.
+	handle {
+		reverse_proxy 127.0.0.1:8080
+	}
+}

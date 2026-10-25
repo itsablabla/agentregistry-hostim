@@ -1,0 +1,28 @@
+id: agentregistry
+name: agentregistry
+description: Skill, prompt, agent and MCP registry behind Caddy auth
+components:
+  volumes: []
+  mysql: []
+  redis: []
+  postgres:
+    - name: main
+      plan: sp-0
+  apps:
+    - name: registry
+      plan: sa-1-1
+      public: true
+      replicas: 1
+      httpPort: 8000
+      healthCheckPath: /healthz
+      domains: []
+      deploymentSource:
+        type: git
+        git:
+          url: https://github.com/itsablabla/agentregistry-hostim
+          branch: main
+          dockerfilepath: Dockerfile
+      envVars:
+        - name: AGENT_REGISTRY_DATABASE_URL
+          value: postgres://$(MAIN_POSTGRES_USER):$(MAIN_POSTGRES_PASSWORD)@$(MAIN_POSTGRES_HOST):$(MAIN_POSTGRES_PORT)/$(MAIN_POSTGRES_DATABASE)?sslmode=disable
+      volumeMounts: []
