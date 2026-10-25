@@ -5,13 +5,14 @@ FROM ghcr.io/agentregistry-dev/agentregistry/server:v0.4.0
 
 USER root
 # git: the Skill controller pins sources with `git ls-remote`.
-RUN apt-get update && apt-get install -y --no-install-recommends git openssh-client ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends git openssh-client ca-certificates python3 python3-yaml \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
+COPY sync-loop.sh /sync-loop.sh
+RUN chmod +x /start.sh /sync-loop.sh
 
 # Registry API/UI and MCP stay on localhost; only Caddy (8000) is exposed.
 ENV AGENT_REGISTRY_SERVER_ADDRESS=127.0.0.1:8080 \

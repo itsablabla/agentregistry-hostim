@@ -21,8 +21,16 @@ if [ -n "${GIT_DEPLOY_KEY_B64:-}" ] && [ -n "${GIT_DEPLOY_REPO:-}" ]; then
 fi
 
 /app/bin/arctl-server &
+SERVER_PID=$!
 caddy run --config /etc/caddy/Caddyfile --adapter caddyfile &
+CADDY_PID=$!
 
-# Exit (and let Hostim restart the container) if either process dies.
-wait -n
+# Background sync from the source-of-truth repo. Not waited on below:
+# a sync failure must not take the registry down.
+if [ -n "${GIT_DEPLOY_REPO:-}" ] && [ "${SYNC_ENABLED:-1}" = "1" ]; then
+  /sync-loop.sh &
+fi
+
+# Exit (and let Hostim restart the container) if the server or Caddy dies.
+wait -n "$SERVER_PID" "$CADDY_PID"
 exit 1
