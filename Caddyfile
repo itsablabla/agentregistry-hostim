@@ -20,6 +20,8 @@
 	# Registry MCP server (streamable HTTP).
 	handle_path /mcp* {
 		reverse_proxy 127.0.0.1:31313 {
+			# The MCP SDK rejects non-localhost Host headers (DNS-rebinding guard).
+			header_up Host 127.0.0.1:31313
 			flush_interval -1
 		}
 	}
